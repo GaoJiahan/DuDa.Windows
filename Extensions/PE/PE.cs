@@ -47,26 +47,26 @@ public unsafe class PE
     private byte[] bytes;
 
 
-    private int hPE;
+    private int ntOffset;
 
     public PE(byte[] bytes)
     {
         this.bytes = bytes;
 
-        hPE = BitConverter.ToInt32(bytes, 0x3C);
+        ntOffset = BitConverter.ToInt32(bytes, 0x3C);
     }
 
     public void Save(string path) => File.WriteAllBytes(path, bytes);
 
-    internal ref IMAGE_NT_HEADERS32 IMAGE_NT_HEADERS32 => ref bytes.To<IMAGE_NT_HEADERS32>(hPE);
+    internal ref IMAGE_NT_HEADERS32 IMAGE_NT_HEADERS32 => ref bytes.To<IMAGE_NT_HEADERS32>(ntOffset);
 
-    internal ref IMAGE_NT_HEADERS64 IMAGE_NT_HEADERS64 => ref bytes.To<IMAGE_NT_HEADERS64>(hPE);
+    internal ref IMAGE_NT_HEADERS64 IMAGE_NT_HEADERS64 => ref bytes.To<IMAGE_NT_HEADERS64>(ntOffset);
 
     public Span<IMAGE_SECTION_HEADER> SectonHeaders
     {
         get
         {
-            fixed (void* ptr = &bytes[hPE + sizeof(IMAGE_FILE_HEADER) + SizeOfOptionalHeader + 4])
+            fixed (void* ptr = &bytes[ntOffset + sizeof(IMAGE_FILE_HEADER) + SizeOfOptionalHeader + 4])
                 return new Span<IMAGE_SECTION_HEADER>(ptr, NumberOfSections);
         }
     }
