@@ -18,6 +18,9 @@ public static class UnSafeExtension
             return ref *(T*)ptr;
         }
     }
+   
+    public unsafe static ref T To<T>(this byte[] values, uint offset) where T : unmanaged
+        => ref To<T>(values, (int)offset);
 
     public unsafe static string ToString(this nint ptr, int length, int offset = 0) => new((char*)ptr, offset, length);
 

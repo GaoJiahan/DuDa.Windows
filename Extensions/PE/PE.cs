@@ -13,6 +13,11 @@ using static PInvoke.IMAGE_OPTIONAL_HEADER;
 
 namespace DuDa.Windows.Extensions.PE;
 
+file static class Helper
+{
+    
+}
+
 public static class PEExtension
 {
     public unsafe static string GetName(ref this IMAGE_SECTION_HEADER section)
@@ -43,7 +48,6 @@ public static class PEExtension
 
 public unsafe class PE
 {
-
     private byte[] bytes;
 
 
@@ -58,9 +62,15 @@ public unsafe class PE
 
     public void Save(string path) => File.WriteAllBytes(path, bytes);
 
+    public uint ToFOA(uint rva) => SectonHeaders.ToArray().
+        Where(section => section.VirtualAddress <= rva && (section.VirtualAddress + section.PhysicalAddressOrVirtualSize) >= rva).
+        Select(section => rva - section.VirtualAddress + section.PointerToRawData).Single();
+
     internal ref IMAGE_NT_HEADERS32 IMAGE_NT_HEADERS32 => ref bytes.To<IMAGE_NT_HEADERS32>(ntOffset);
 
     internal ref IMAGE_NT_HEADERS64 IMAGE_NT_HEADERS64 => ref bytes.To<IMAGE_NT_HEADERS64>(ntOffset);
+
+    internal ref IMAGE_EXPORT_DIRECTORY IMAGE_EXPORT_DIRECTORY => ref bytes.To<IMAGE_EXPORT_DIRECTORY>(ToFOA(DataDirectory.ExportTable.VirtualAddress));
 
     public Span<IMAGE_SECTION_HEADER> SectonHeaders
     {
@@ -102,6 +112,4 @@ public unsafe class PE
     public int SizeOfHeaders => IMAGE_NT_HEADERS32.OptionalHeader.SizeOfHeaders;
 
     public IMAGE_OPTIONAL_HEADER_DIRECTORIES DataDirectory => IsPE32 ? IMAGE_NT_HEADERS32.OptionalHeader.DataDirectory : IMAGE_NT_HEADERS64.OptionalHeader.DataDirectory;
-
-    
 }
