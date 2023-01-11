@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices.Marshalling;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using System.Threading.Tasks;
 using static PInvoke.IMAGE_FILE_HEADER;
@@ -137,7 +138,7 @@ public unsafe class PE
         }
     }
 
-    public IEnumerable<int> RestoreRelocationTable(nint imageBase)
+    public void RestoreRelocationTable(nint imageBase)
     {
         int begin = (int)ToFOA(DataDirectory.BaseRelocationTable.VirtualAddress);
 
@@ -153,11 +154,20 @@ public unsafe class PE
 
                 if ((value & 0b0011_0000_0000_0000) is not 0)
                 {
-                    yield return (value ^ 0b0011_0000_0000_0000) + tReloaction.VirtualAddress;
+                    var foa = (value ^ 0b0011_0000_0000_0000) + tReloaction.VirtualAddress;
+
+                    var old = bytes.To<int>(foa);
+
+                    bytes.To<int>(foa) = old - (int)ImageBase + (int)imageBase;
+
                 }
                 else if ((value & 0b1010_0000_0000_0000) is not 0)
                 {
-                    yield return (value ^ 0b1010_0000_0000_0000) + tReloaction.VirtualAddress;
+                    var foa = (value ^ 0b1010_0000_0000_0000) + tReloaction.VirtualAddress;
+
+                    var old = bytes.To<long>(foa);
+
+                    bytes.To<long>(foa) = old - ImageBase + imageBase;
                 }
             }
 
