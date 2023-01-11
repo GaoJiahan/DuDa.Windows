@@ -3,6 +3,7 @@ using System.Text;
 using DuDa.Windows.Diagnostics;
 using static PInvoke.Kernel32;
 using System;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DuDa.Windows.Extensions.VirtualMemory;
 
@@ -150,5 +151,7 @@ public class VirtualMemoryPointer<T> : IDisposable where T : unmanaged
 
     public static VirtualMemoryPointer<T> operator -(VirtualMemoryPointer<T> l, int r)
         => l + (-r);
+
+    public static implicit operator nint(VirtualMemoryPointer<T> ptr) => ptr.Address;
 }
 

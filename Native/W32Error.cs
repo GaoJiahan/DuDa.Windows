@@ -2,7 +2,7 @@
 
 namespace DuDa.Windows.Native;
 
-public static class W32LogExtension
+internal static class W32LogExtension
 {
     public static string GetLogMessage(this Win32ErrorCode err)
     {
