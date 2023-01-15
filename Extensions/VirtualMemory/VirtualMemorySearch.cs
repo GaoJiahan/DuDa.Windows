@@ -96,7 +96,7 @@ public static class VirtualMemorySearch
     /// 搜索内存页字节数组(使用了Sunday算法)
     /// </summary>
     internal unsafe static void SerachPage(this Process process, nint address, byte[] sub, int[] go,
-        VirtualMemorySearchSetting setting, ConcurrentBag<VirtualMemoryPointer<nint>> list)
+        VirtualMemorySearchSetting setting, ConcurrentBag<VirtualMemoryPointer> list)
     {
         var buffer = stackalloc byte[setting.PageSize];
 
@@ -121,7 +121,7 @@ public static class VirtualMemorySearch
 
             if (j >= sub.Length)
             {
-                list.Add(new VirtualMemoryPointer<nint>(process, i - j + address));
+                list.Add(new VirtualMemoryPointer(process, i - j + address));
                 j = 0;
             }
         }
@@ -130,8 +130,8 @@ public static class VirtualMemorySearch
     /// <summary>
     /// 内存页搜索工具方法
     /// </summary>
-    internal unsafe static void SerachPage(this Process process,nint address,
-        VirtualMemorySearchSetting setting, ConcurrentBag<VirtualMemoryPointer<nint>> list, Func<byte, bool> predicate)
+    internal unsafe static void SerachPage(this Process process, nint address,
+        VirtualMemorySearchSetting setting, ConcurrentBag<VirtualMemoryPointer> list, Func<byte, bool> predicate)
     {
         var buffer = stackalloc byte[setting.PageSize];
 
@@ -139,14 +139,14 @@ public static class VirtualMemorySearch
 
         for (var i = 0; i < setting.PageSize; i += setting.Alignment.Byte)
             if (*(buffer + i) is var value && predicate(value))
-                list.Add(new VirtualMemoryPointer<nint>(process, i + address));
+                list.Add(new VirtualMemoryPointer(process, i + address));
     }
 
     /// <summary>
     /// 内存页搜索工具方法
     /// </summary>
     internal unsafe static void SerachPage(this Process process, nint address,
-        VirtualMemorySearchSetting setting, ConcurrentBag<VirtualMemoryPointer<nint>> list, Func<short, bool> predicate)
+        VirtualMemorySearchSetting setting, ConcurrentBag<VirtualMemoryPointer> list, Func<short, bool> predicate)
     {
         var buffer = stackalloc byte[setting.PageSize];
 
@@ -154,14 +154,14 @@ public static class VirtualMemorySearch
 
         for (var i = 0; i < setting.PageSize; i += setting.Alignment.Short)
             if (*(short*)(buffer + i) is var value && predicate(value))
-                list.Add(new VirtualMemoryPointer<nint>(process, i + address));
+                list.Add(new VirtualMemoryPointer(process, i + address));
     }
 
     /// <summary>
     /// 内存页搜索工具方法
     /// </summary>
     internal unsafe static void SerachPage(this Process process, nint address,
-        VirtualMemorySearchSetting setting, ConcurrentBag<VirtualMemoryPointer<nint>> list, Func<int, bool> predicate)
+        VirtualMemorySearchSetting setting, ConcurrentBag<VirtualMemoryPointer> list, Func<int, bool> predicate)
     {
         var buffer = stackalloc byte[setting.PageSize];
 
@@ -169,14 +169,14 @@ public static class VirtualMemorySearch
 
         for (var i = 0; i < setting.PageSize; i += setting.Alignment.Int)
             if (*(int*)(buffer + i) is var value && predicate(value))
-                list.Add(new VirtualMemoryPointer<nint>(process, i + address));
+                list.Add(new VirtualMemoryPointer(process, i + address));
     }
 
     /// <summary>
     /// 内存页搜索工具方法
     /// </summary>
     internal unsafe static void SerachPage(this Process process, nint address,
-        VirtualMemorySearchSetting setting, ConcurrentBag<VirtualMemoryPointer<nint>> list, Func<long, bool> predicate)
+        VirtualMemorySearchSetting setting, ConcurrentBag<VirtualMemoryPointer> list, Func<long, bool> predicate)
     {
         var buffer = stackalloc byte[setting.PageSize];
 
@@ -184,14 +184,14 @@ public static class VirtualMemorySearch
 
         for (var i = 0; i < setting.PageSize; i += setting.Alignment.Long)
             if (*(long*)(buffer + i) is var value && predicate(value))
-                list.Add(new VirtualMemoryPointer<nint>(process, i + address));
+                list.Add(new VirtualMemoryPointer(process, i + address));
     }
 
     /// <summary>
     /// 内存页搜索工具方法
     /// </summary>
     internal unsafe static void SerachPage(this Process process, nint address,
-        VirtualMemorySearchSetting setting, ConcurrentDictionary<VirtualMemoryPointer<nint>, float> dict, Func<float, bool> predicate)
+        VirtualMemorySearchSetting setting, ConcurrentDictionary<VirtualMemoryPointer, float> dict, Func<float, bool> predicate)
     {
         var buffer = stackalloc byte[setting.PageSize];
 
@@ -199,14 +199,14 @@ public static class VirtualMemorySearch
 
         for (var i = 0; i < setting.PageSize; i += setting.Alignment.Float)
             if (*(float*)(buffer + i) is var value && predicate(value))
-                dict[new VirtualMemoryPointer<nint>(process, i + address)] = value;
+                dict[new VirtualMemoryPointer(process, i + address)] = value;
     }
 
     /// <summary>
     /// 内存页搜索工具方法
     /// </summary>
     internal unsafe static void SerachPage(this Process process, nint address,
-        VirtualMemorySearchSetting setting, ConcurrentDictionary<VirtualMemoryPointer<nint>, double> dict, Func<double, bool> predicate)
+        VirtualMemorySearchSetting setting, ConcurrentDictionary<VirtualMemoryPointer, double> dict, Func<double, bool> predicate)
     {
         var buffer = stackalloc byte[setting.PageSize];
 
@@ -214,7 +214,7 @@ public static class VirtualMemorySearch
 
         for (var i = 0; i < setting.PageSize; i += setting.Alignment.Double)
             if (*(double*)(buffer + i) is var value && predicate(value))
-                dict[new VirtualMemoryPointer<nint>(process, i + address)] = value;
+                dict[new VirtualMemoryPointer(process, i + address)] = value;
     }
 
     #endregion
@@ -225,12 +225,12 @@ public static class VirtualMemorySearch
     /// <summary>
     /// 搜索虚拟内存字节数组
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> SearchMemory(this Process process, byte[] target,
+    public static IEnumerable<VirtualMemoryPointer> SearchMemory(this Process process, byte[] target,
         Func<VirtualMemorySearchSetting, VirtualMemorySearchSetting> action)
     {
-        var setting =  action(new());
+        var setting = action(new());
 
-        var list = new ConcurrentBag<VirtualMemoryPointer<nint>>();
+        var list = new ConcurrentBag<VirtualMemoryPointer>();
 
         var go = new int[256];
 
@@ -246,7 +246,7 @@ public static class VirtualMemorySearch
     /// <summary>
     /// 搜索虚拟内存字节数组
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> SearchMemory(this Process process, byte[] target)       
+    public static IEnumerable<VirtualMemoryPointer> SearchMemory(this Process process, byte[] target)
         => SearchMemory(process, target, setting => setting);
 
     /// <summary>
@@ -257,14 +257,14 @@ public static class VirtualMemorySearch
     /// 如果没有小数, 范围在目标数加 1 到减 1 的范围内<br/><br/>
     /// 如果有小数, 则是小数点末位数 加 1 到减 1 的范围内
     /// </remarks>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, float>> SearchMemory(this Process process, float target,
-        Func<VirtualMemorySearchSetting, VirtualMemorySearchSetting> action)     
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, float>> SearchMemory(this Process process, float target,
+        Func<VirtualMemorySearchSetting, VirtualMemorySearchSetting> action)
     {
         var setting = action(new());
 
         var (min, max) = target.Range();
 
-        var dict = new ConcurrentDictionary<VirtualMemoryPointer<nint>, float>();
+        var dict = new ConcurrentDictionary<VirtualMemoryPointer, float>();
 
         Parallel.ForEach(process.Paging(setting).ToList(), address => process.SerachPage(address, setting, dict, (float value) => value.Cmp(min, max)));
 
@@ -279,14 +279,14 @@ public static class VirtualMemorySearch
     /// 如果没有小数, 范围在目标数加 1 到减 1 的范围内<br/><br/>
     /// 如果有小数, 则是小数点末位数 加 1 到减 1 的范围内
     /// </remarks>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, double>> SearchMemory(this Process process, double target,
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, double>> SearchMemory(this Process process, double target,
         Func<VirtualMemorySearchSetting, VirtualMemorySearchSetting> action)
     {
         var setting = action(new());
 
         var (min, max) = target.Range();
 
-        var dict = new ConcurrentDictionary<VirtualMemoryPointer<nint>, double>();
+        var dict = new ConcurrentDictionary<VirtualMemoryPointer, double>();
 
         Parallel.ForEach(process.Paging(setting).ToList(), address => process.SerachPage(address, setting, dict, (double value) => value.Cmp(min, max)));
 
@@ -301,7 +301,7 @@ public static class VirtualMemorySearch
     /// 如果没有小数, 范围在目标数加 1 到减 1 的范围内<br/><br/>
     /// 如果有小数, 则是小数点末位数 加 1 到减 1 的范围内
     /// </remarks>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, float>> SearchMemory(this Process process, float target) 
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, float>> SearchMemory(this Process process, float target)
         => SearchMemory(process, target, setting => setting);
 
     /// <summary>
@@ -312,18 +312,18 @@ public static class VirtualMemorySearch
     /// 如果没有小数, 范围在目标数加 1 到减 1 的范围内<br/><br/>
     /// 如果有小数, 则是小数点末位数 加 1 到减 1 的范围内
     /// </remarks>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, double>> SearchMemory(this Process process, double target)
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, double>> SearchMemory(this Process process, double target)
         => SearchMemory(process, target, setting => setting);
 
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> SearchMemory(this Process process, Func<byte, bool> predicate,
-        Func<VirtualMemorySearchSetting, VirtualMemorySearchSetting> action) 
+    public static IEnumerable<VirtualMemoryPointer> SearchMemory(this Process process, Func<byte, bool> predicate,
+        Func<VirtualMemorySearchSetting, VirtualMemorySearchSetting> action)
     {
         var setting = action(new());
 
-        ConcurrentBag<VirtualMemoryPointer<nint>> dict = new();
+        ConcurrentBag<VirtualMemoryPointer> dict = new();
 
         Parallel.ForEach(process.Paging(setting).ToList(), address => process.SerachPage(address, setting, dict, (byte value) => predicate(value)));
 
@@ -333,12 +333,12 @@ public static class VirtualMemorySearch
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> SearchMemory(this Process process, Func<short, bool> predicate,
+    public static IEnumerable<VirtualMemoryPointer> SearchMemory(this Process process, Func<short, bool> predicate,
         Func<VirtualMemorySearchSetting, VirtualMemorySearchSetting> action)
     {
         var setting = action(new());
 
-        ConcurrentBag<VirtualMemoryPointer<nint>> dict = new();
+        ConcurrentBag<VirtualMemoryPointer> dict = new();
 
         Parallel.ForEach(process.Paging(setting).ToList(), address => process.SerachPage(address, setting, dict, (short value) => predicate(value)));
 
@@ -348,12 +348,12 @@ public static class VirtualMemorySearch
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> SearchMemory(this Process process, Func<int, bool> predicate,
+    public static IEnumerable<VirtualMemoryPointer> SearchMemory(this Process process, Func<int, bool> predicate,
         Func<VirtualMemorySearchSetting, VirtualMemorySearchSetting> action)
     {
         var setting = action(new());
 
-        ConcurrentBag<VirtualMemoryPointer<nint>> dict = new();
+        ConcurrentBag<VirtualMemoryPointer> dict = new();
 
         Parallel.ForEach(process.Paging(setting).ToList(), address => process.SerachPage(address, setting, dict, (int value) => predicate(value)));
 
@@ -363,12 +363,12 @@ public static class VirtualMemorySearch
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> SearchMemory(this Process process, Func<long, bool> predicate,
+    public static IEnumerable<VirtualMemoryPointer> SearchMemory(this Process process, Func<long, bool> predicate,
         Func<VirtualMemorySearchSetting, VirtualMemorySearchSetting> action)
     {
         var setting = action(new());
 
-        ConcurrentBag<VirtualMemoryPointer<nint>> dict = new();
+        ConcurrentBag<VirtualMemoryPointer> dict = new();
 
         Parallel.ForEach(process.Paging(setting).ToList(), address => process.SerachPage(address, setting, dict, (long value) => predicate(value)));
 
@@ -378,12 +378,12 @@ public static class VirtualMemorySearch
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据(浮点数返回一个字典, 内存地址 + 初始的精确值)
     /// </summary>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, float>> SearchMemory(this Process process, Func<float, bool> predicate,
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, float>> SearchMemory(this Process process, Func<float, bool> predicate,
         Func<VirtualMemorySearchSetting, VirtualMemorySearchSetting> action)
     {
         var setting = action(new());
 
-        var dict = new ConcurrentDictionary<VirtualMemoryPointer<nint>, float>();
+        var dict = new ConcurrentDictionary<VirtualMemoryPointer, float>();
 
         Parallel.ForEach(process.Paging(setting).ToList(), address => process.SerachPage(address, setting, dict, (float value) => predicate(value)));
 
@@ -393,12 +393,12 @@ public static class VirtualMemorySearch
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据(浮点数返回一个字典, 内存地址 + 初始的精确值)
     /// </summary>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, double>> SearchMemory(this Process process, Func<double, bool> predicate,
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, double>> SearchMemory(this Process process, Func<double, bool> predicate,
         Func<VirtualMemorySearchSetting, VirtualMemorySearchSetting> action)
     {
         var setting = action(new());
 
-        var dict = new ConcurrentDictionary<VirtualMemoryPointer<nint>, double>();
+        var dict = new ConcurrentDictionary<VirtualMemoryPointer, double>();
 
         Parallel.ForEach(process.Paging(setting).ToList(), address => process.SerachPage(address, setting, dict, (double value) => predicate(value)));
 
@@ -408,37 +408,37 @@ public static class VirtualMemorySearch
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> SearchMemory(this Process process, Func<byte, bool> predicate)
+    public static IEnumerable<VirtualMemoryPointer> SearchMemory(this Process process, Func<byte, bool> predicate)
         => SearchMemory(process, predicate, setting => setting);
 
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> SearchMemory(this Process process, Func<short, bool> predicate)
+    public static IEnumerable<VirtualMemoryPointer> SearchMemory(this Process process, Func<short, bool> predicate)
         => SearchMemory(process, predicate, setting => setting);
 
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> SearchMemory(this Process process, Func<int, bool> predicate)
+    public static IEnumerable<VirtualMemoryPointer> SearchMemory(this Process process, Func<int, bool> predicate)
         => SearchMemory(process, predicate, setting => setting);
 
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> SearchMemory(this Process process, Func<long, bool> predicate)
+    public static IEnumerable<VirtualMemoryPointer> SearchMemory(this Process process, Func<long, bool> predicate)
         => SearchMemory(process, predicate, setting => setting);
 
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据(浮点数返回一个字典, 内存地址 + 初始的精确值)
     /// </summary>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, float>> SearchMemory(this Process process, Func<float, bool> predicate)
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, float>> SearchMemory(this Process process, Func<float, bool> predicate)
         => SearchMemory(process, predicate, setting => setting);
 
     /// <summary>
     /// 搜索虚拟内存中满足指定谓词的数据(浮点数返回一个字典, 内存地址 + 初始的精确值)
     /// </summary>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, double>> SearchMemory(this Process process, Func<double, bool> predicate)
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, double>> SearchMemory(this Process process, Func<double, bool> predicate)
         => SearchMemory(process, predicate, setting => setting);
 
     #endregion

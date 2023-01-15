@@ -44,7 +44,7 @@ public class Process : IDisposable
     /// <summary>
     /// 查询系统 Id 为 <paramref name="pid"/> 的进程
     /// </summary>
-    public static PrcoessSnapshot GetProcessById(int pid) => Snapshot.QueryProcess(x => x.th32ParentProcessID == pid).Single();
+    public static PrcoessSnapshot GetProcessById(int pid) => Snapshot.QueryProcess(x => x.th32ProcessID == pid).Single();
 
     #endregion
 
@@ -84,7 +84,7 @@ public class Process : IDisposable
     /// </summary>
     public bool IsProtected
         => Snapshot.QueryProcessInfo(handle)?.Flags.HasFlag(PSS_PROCESS_FLAGS.PSS_PROCESS_FLAGS_PROTECTED) ?? false;
-    
+
     /// <summary>
     /// 进程文件路径
     /// </summary>
@@ -157,7 +157,7 @@ public class Process : IDisposable
     /// </summary>
     public IEnumerable<ModuleInfo> Modules
     {
-        get 
+        get
         {
             using var hSnapshot = Snapshot.CreateModuleSnapshot(Id);
 
@@ -173,6 +173,7 @@ public class Process : IDisposable
                         Handle = info.hModule_IntPtr,
                         Name = info.Module,
                         Path = info.ExePath,
+                        hProcess = Handle
                     };
 
                 } while (Module32Next(hSnapshot, ref info));
@@ -222,7 +223,7 @@ public class Process : IDisposable
                     };
                 }
             }
-              
+
         }
     }
 

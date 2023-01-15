@@ -4,6 +4,7 @@ using DuDa.Windows.Diagnostics;
 using static PInvoke.Kernel32;
 using System;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Runtime.InteropServices;
 
 namespace DuDa.Windows.Extensions.VirtualMemory;
 
@@ -13,18 +14,20 @@ namespace DuDa.Windows.Extensions.VirtualMemory;
 /// </summary>
 /// <remarks>
 /// 注意: <br/><br/>
-/// 因为 += 和 -= 符号不能重载, 所以一元 ++ 和 -- 符号都是以泛型宽度决定步长<br/><br/>
-/// 二元 + 和 - 符号不以泛型宽度为步长, 统一以 1 字节来进行偏移
+/// 因为 += 和 -= 符号不能重载, 所以一元 ++ 和 -- 符号都是以Step属性决定步长<br/><br/>
+/// 二元 + 和 - 符号不以Step属性为步长, 统一以 1 字节来进行偏移
 /// </remarks>
-public class VirtualMemoryPointer<T> : IDisposable where T : unmanaged
+public class VirtualMemoryPointer : SafeHandle
 {
     private readonly Process process;
 
-    internal bool isFree = false;
+    private readonly bool ownsHandle;
 
-    public VirtualMemoryPointer(Process process, nint address)
+    public VirtualMemoryPointer(Process process, nint address, bool ownsHandle = false) : base(address, ownsHandle)
     {
         this.process = process;
+
+        this.ownsHandle = ownsHandle;
 
         Address = address;
     }
@@ -33,6 +36,11 @@ public class VirtualMemoryPointer<T> : IDisposable where T : unmanaged
     ///内存地址
     /// </summary>
     public nint Address { get; private set; }
+
+    /// <summary>
+    /// 指针自增时的步长
+    /// </summary>
+    public int Step { get; set; } = 1;
 
     /// <summary>
     /// 内存地址所处的页保护属性
@@ -55,17 +63,7 @@ public class VirtualMemoryPointer<T> : IDisposable where T : unmanaged
         }
     }
 
-    /// <summary>
-    /// 获取内存地址处的数据
-    /// </summary>
-    public unsafe T Get() => Get<T>(1)[0];
-
-
-    /// <summary>
-    /// 获取内存地址处的数据
-    /// </summary>
-    public unsafe T[] Get(int length) => Get<T>(length);
-
+    public override bool IsInvalid => Address == 0;
 
     /// <summary>
     /// 获取内存地址处的数据
@@ -102,6 +100,11 @@ public class VirtualMemoryPointer<T> : IDisposable where T : unmanaged
     }
 
     /// <summary>
+    /// 设置内存地址处的数据
+    /// </summary>
+    public bool Set(string data, Encoding encoding) => Set(encoding.GetBytes(data));
+
+    /// <summary>
     /// 获取内存地址处的 Ascii 字符串
     /// </summary>
     public unsafe string GetAscii(int length = 4096)
@@ -125,33 +128,31 @@ public class VirtualMemoryPointer<T> : IDisposable where T : unmanaged
         return encoding.GetString(Get<byte>(length).TakeWhile(x => x is not 0).ToArray());
     }
 
-    public void Dispose()
+    protected override bool ReleaseHandle()
     {
-        if (isFree && Address is not 0) W32VirtualMemory.VirtualFreeEx(process.Handle, Address, 0, 0x00008000);
+        return W32VirtualMemory.VirtualFreeEx(process.Handle, handle, 0, 0x8000);
     }
 
-    public VirtualMemoryPointer<TYPE> Cast<TYPE>() where TYPE : unmanaged => new(process, Address);
-
-    public unsafe static VirtualMemoryPointer<T> operator ++(VirtualMemoryPointer<T> l)
+    public unsafe static VirtualMemoryPointer operator ++(VirtualMemoryPointer l)
     {
-        l.Address += sizeof(T);
+        l.Address += l.Step;
 
         return l;
     }
 
-    public unsafe static VirtualMemoryPointer<T> operator --(VirtualMemoryPointer<T> l)
+    public unsafe static VirtualMemoryPointer operator --(VirtualMemoryPointer l)
     {
-        l.Address -= sizeof(T);
+        l.Address -= l.Step;
 
         return l;
     }
 
-    public static VirtualMemoryPointer<T> operator +(VirtualMemoryPointer<T> l, int r)
-        => new VirtualMemoryPointer<T>(l.process, l.Address + r);
+    public static VirtualMemoryPointer operator +(VirtualMemoryPointer l, int r)
+        => new VirtualMemoryPointer(l.process, l.Address + r, l.ownsHandle);
 
-    public static VirtualMemoryPointer<T> operator -(VirtualMemoryPointer<T> l, int r)
+    public static VirtualMemoryPointer operator -(VirtualMemoryPointer l, int r)
         => l + (-r);
 
-    public static implicit operator nint(VirtualMemoryPointer<T> ptr) => ptr.Address;
+    public static implicit operator nint(VirtualMemoryPointer ptr) => ptr.Address;
 }
 

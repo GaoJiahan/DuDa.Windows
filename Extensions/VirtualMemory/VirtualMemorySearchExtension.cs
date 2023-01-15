@@ -10,18 +10,18 @@ public static class VirtualMemorySearchExtension
     /// <summary>
     /// 搜索内存地址序列中满足目标字节数组的元素
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> Search(this IEnumerable<VirtualMemoryPointer<nint>> result, byte[] target)
+    public static IEnumerable<VirtualMemoryPointer> Search(this IEnumerable<VirtualMemoryPointer> result, byte[] target)
     {
-        foreach(var item in result) 
-            if(item.Get<byte>(target.Length).SequenceEqual(target))
-                yield return item;        
+        foreach (var item in result)
+            if (item.Get<byte>(target.Length).SequenceEqual(target))
+                yield return item;
     }
 
 
     /// <summary>
     /// 搜索内存地址序列中满足指定谓词的元素
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> Search(this IEnumerable<VirtualMemoryPointer<nint>> result, Func<byte, bool> predicate)
+    public static IEnumerable<VirtualMemoryPointer> Search(this IEnumerable<VirtualMemoryPointer> result, Func<byte, bool> predicate)
     {
         foreach (var item in result)
             if (predicate(item.Get<byte>()))
@@ -32,7 +32,7 @@ public static class VirtualMemorySearchExtension
     /// <summary>
     /// 搜索内存地址序列中满足指定谓词的元素
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> Search(this IEnumerable<VirtualMemoryPointer<nint>> result, Func<short, bool> predicate)
+    public static IEnumerable<VirtualMemoryPointer> Search(this IEnumerable<VirtualMemoryPointer> result, Func<short, bool> predicate)
     {
         foreach (var item in result)
             if (predicate(item.Get<short>()))
@@ -43,7 +43,7 @@ public static class VirtualMemorySearchExtension
     /// <summary>
     /// 搜索内存地址序列中满足指定谓词的元素
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> Search(this IEnumerable<VirtualMemoryPointer<nint>> result, Func<int, bool> predicate)
+    public static IEnumerable<VirtualMemoryPointer> Search(this IEnumerable<VirtualMemoryPointer> result, Func<int, bool> predicate)
     {
         foreach (var item in result)
             if (predicate(item.Get<int>()))
@@ -54,7 +54,7 @@ public static class VirtualMemorySearchExtension
     /// <summary>
     /// 搜索内存地址序列中满足指定谓词的元素
     /// </summary>
-    public static IEnumerable<VirtualMemoryPointer<nint>> Search(this IEnumerable<VirtualMemoryPointer<nint>> result, Func<long, bool> predicate)
+    public static IEnumerable<VirtualMemoryPointer> Search(this IEnumerable<VirtualMemoryPointer> result, Func<long, bool> predicate)
     {
         foreach (var item in result)
             if (predicate(item.Get<long>()))
@@ -65,10 +65,10 @@ public static class VirtualMemorySearchExtension
     /// <summary>
     /// 搜索内存地址序列中满足指定谓词的元素
     /// </summary>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, float>> Search(this IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, float>> result, Func<float, float , bool> predicate)
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, float>> Search(this IEnumerable<KeyValuePair<VirtualMemoryPointer, float>> result, Func<float, float, bool> predicate)
     {
         foreach (var item in result)
-            if (predicate(item.Key.Get<float>(),item.Value))
+            if (predicate(item.Key.Get<float>(), item.Value))
                 yield return item;
     }
 
@@ -76,7 +76,7 @@ public static class VirtualMemorySearchExtension
     /// <summary>
     /// 搜索内存地址序列中满足指定谓词的元素
     /// </summary>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, double>> Search(this IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, double>> result, Func<double, double, bool> predicate)
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, double>> Search(this IEnumerable<KeyValuePair<VirtualMemoryPointer, double>> result, Func<double, double, bool> predicate)
     {
         foreach (var item in result)
             if (predicate(item.Key.Get<double>(), item.Value))
@@ -92,8 +92,8 @@ public static class VirtualMemorySearchExtension
     /// 如果没有小数, 范围在目标数加 1 到减 1 的范围内<br/><br/>
     /// 如果有小数, 则是小数点末位数 加 1 到减 1 的范围内
     /// </remarks>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, float>> Search
-        (this IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, float>> result, float target)
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, float>> Search
+        (this IEnumerable<KeyValuePair<VirtualMemoryPointer, float>> result, float target)
     {
         var (min, max) = target.Range();
 
@@ -109,8 +109,8 @@ public static class VirtualMemorySearchExtension
     /// 如果没有小数, 范围在目标数加 1 到减 1 的范围内<br/><br/>
     /// 如果有小数, 则是小数点末位数 加 1 到减 1 的范围内
     /// </remarks>
-    public static IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, double>> Search
-        (this IEnumerable<KeyValuePair<VirtualMemoryPointer<nint>, double>> result, double target)
+    public static IEnumerable<KeyValuePair<VirtualMemoryPointer, double>> Search
+        (this IEnumerable<KeyValuePair<VirtualMemoryPointer, double>> result, double target)
     {
         var (min, max) = target.Range();
 

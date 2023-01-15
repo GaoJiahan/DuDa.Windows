@@ -14,7 +14,7 @@ internal class ThreadInfo : KernelObject
 {
     public int Id { get; init; }
 
-    public bool QueueAPC<T>(VirtualMemoryPointer<T> address, nint param) where T : unmanaged
+    public bool QueueAPC<T>(VirtualMemoryPointer address, nint param) where T : unmanaged
     {
         using var handle = CopyHandle();
 

@@ -10,9 +10,9 @@ public static class VirtualMemoryExtension
     /// <summary>
     /// 分配进程虚拟内存
     /// </summary>
-    public static VirtualMemoryPointer<T> AllocMemory<T>(this Process process, VirtualMemoryAllocSetting setting) where T : unmanaged
+    public static VirtualMemoryPointer AllocMemory(this Process process, VirtualMemoryAllocSetting setting)
     {
-        var address = new VirtualMemoryPointer<T>(process, W32VirtualMemory.VirtualAllocEx(process.Handle, setting.Address, setting.Size, setting.Type, setting.Protect)) { isFree = true };
+        var address = new VirtualMemoryPointer(process, W32VirtualMemory.VirtualAllocEx(process.Handle, setting.Address, setting.Size, setting.Type, setting.Protect));
 
         System.Diagnostics.Debug.WriteLineIf(address.Address is 0, $"{nameof(W32VirtualMemory.VirtualAllocEx)} 分配进程 {QueryFullProcessImageName(process.handle)} 虚拟内存失败. - {GetLastError().GetLogMessage()}");
 
@@ -22,12 +22,13 @@ public static class VirtualMemoryExtension
     /// <summary>
     /// 分配进程虚拟内存
     /// </summary>
-    public static VirtualMemoryPointer<T> AllocMemory<T>(this Process process, int size) where T : unmanaged => AllocMemory<T>(process, new VirtualMemoryAllocSetting() { Size = size });
+    public static VirtualMemoryPointer AllocMemory(this Process process, int size = 0x1000) => AllocMemory(process, new VirtualMemoryAllocSetting() { Size = size });
+
 
     /// <summary>
     /// 分配进程虚拟内存指针
     /// </summary>
-    public static unsafe VirtualMemoryPointer<T> CreateMemoryPointer<T>(this Process process, params nint[] addresses) where T : unmanaged
+    public static unsafe VirtualMemoryPointer CreateMemoryPointer(this Process process, params nint[] addresses)
     {
         switch (addresses.Length)
         {

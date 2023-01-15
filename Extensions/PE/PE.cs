@@ -43,6 +43,16 @@ public static class PEExtension
     }
 }
 
+public record ImportFunctionInfo
+{
+    public string Name { get; set; } = default!;
+
+    public int IatFoa { get; set; }
+
+    public int IatRva { get; set; }
+
+    public int Hint { get; set; }
+}
 public unsafe class PE
 {
     private byte[] bytes;
@@ -64,13 +74,16 @@ public unsafe class PE
         Where(section => section.VirtualAddress <= rva && (section.VirtualAddress + section.PhysicalAddressOrVirtualSize) >= rva).
         Select(section => rva - section.VirtualAddress + section.PointerToRawData).Single();
 
+
     public int ToFOA(int rva) => (int)ToFOA((uint)rva);
 
     internal ref IMAGE_NT_HEADERS32 IMAGE_NT_HEADERS32 => ref bytes.To<IMAGE_NT_HEADERS32>(ntOffset);
 
     internal ref IMAGE_NT_HEADERS64 IMAGE_NT_HEADERS64 => ref bytes.To<IMAGE_NT_HEADERS64>(ntOffset);
 
-    internal ref IMAGE_EXPORT_DIRECTORY IMAGE_EXPORT_DIRECTORY => ref bytes.To<IMAGE_EXPORT_DIRECTORY>(ToFOA(DataDirectory.ExportTable.VirtualAddress));
+    internal ref IMAGE_EXPORT_DIRECTORY IMAGE_EXPORT_DIRECTORY => ref bytes.To<IMAGE_EXPORT_DIRECTORY>((int)ToFOA(DataDirectory.ExportTable.VirtualAddress));
+
+    internal ref IMAGE_IMPORT_DESCRIPTOR IMAGE_IMPORT_DESCRIPTOR => ref bytes.To<IMAGE_IMPORT_DESCRIPTOR>((int)ToFOA(DataDirectory.ImportTable.VirtualAddress));
 
     public Span<IMAGE_SECTION_HEADER> SectonHeaders
     {
@@ -134,6 +147,72 @@ public unsafe class PE
                         else yield return (offset, (j + IMAGE_EXPORT_DIRECTORY.Base).ToString());
                     }
                 }
+            }
+        }
+    }
+
+    public IEnumerable<KeyValuePair<string, IEnumerable<ImportFunctionInfo>>> ImportModules
+    {
+        get
+        {
+            int begin = (int)ToFOA(DataDirectory.ImportTable.VirtualAddress);
+
+            while (true)
+            {
+                IMAGE_IMPORT_DESCRIPTOR tImport = bytes.To<IMAGE_IMPORT_DESCRIPTOR>(begin);
+
+                if (tImport.OriginalFirstThunk is 0) break;
+
+                string moduleName = bytes.ToAscii(ToFOA(tImport.Name));
+
+                List<ImportFunctionInfo> list = new();
+
+                int intBegin = ToFOA(tImport.OriginalFirstThunk);
+
+                int iatBegin = tImport.FirstThunk;
+
+                if (IsPE32)
+                {
+                    while (bytes.To<uint>(intBegin) is uint intValue and not 0)
+                    {
+                        var isById = (intValue & 0x80000000) is not 0;
+
+                        list.Add(new()
+                        {
+                            Name = isById ? (intValue ^ 0x80000000).ToString() : bytes.ToAscii(ToFOA((int)intValue) + 2),
+                            IatFoa = ToFOA(iatBegin),
+                            IatRva = iatBegin,
+                            Hint = isById ? default : bytes.To<short>(ToFOA((int)intValue))
+                        });
+
+                        intBegin += 4;
+
+                        iatBegin += 4;
+                    }
+                }
+                else
+                {
+                    while (bytes.To<ulong>(intBegin) is ulong intValue and not 0)
+                    {
+                        var isById = (intValue & 0x8000000000000000) is not 0;
+
+                        list.Add(new()
+                        {
+                            Name = isById ? (intValue ^ 0x8000000000000000).ToString() : bytes.ToAscii(ToFOA((int)intValue) + 2),
+                            IatFoa = ToFOA(iatBegin),
+                            IatRva = iatBegin,
+                            Hint = isById ? default : bytes.To<short>(ToFOA((int)intValue))
+                        });
+
+                        intBegin += 8;
+
+                        iatBegin += 8;
+                    }
+                }
+
+                yield return new(moduleName, list);
+
+                begin += tImport.Size();
             }
         }
     }
